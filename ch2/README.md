@@ -1,83 +1,64 @@
-# 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
 
-[인프런 강의 링크](https://www.inflearn.com/course/풀스택-리액트-토이프로젝트?inst=4227b52f)
+---
 
-- ReactJS 기반의 간단한 SNS 서비스를 만들면서 REST API 및 GraphQL을 연습합니다.
-- 클라이언트와 서버 양쪽을 모두 다룸으로써 서버에 대한 두려움을 낮춰드리고자 합니다.
-- 더이상 프론트엔드 개발을 위해 MySQL, mongoDB, Firebase 등을 찾아다니지 않아도 됩니다.
+### 🔨 2. 실행방법(server)
 
-## 대상
+- cd server
+- yarn init -y : package.json 자동 생성
 
-- 프론트엔드 개발자 또는 취준생
-- 데이터통신 연습을 하고 싶은데 마땅한 방법을 몰라 고민이신 분
-- Database나 server에 대해서까지 오랜 시간을 들여 공부해야 할지 망설여지는 분
-- 개발 단계에서 api가 마련되기 전에 프론트엔드 개발을 서두르고 싶은 분
+```jsx
+// ch2/server
 
-## 다루는 내용
+yarn add express cors uuid
 
-- core
-  - NodeJS
-  - express
-  - json Database (file system)
+yarn add --dev nodemon
+```
 
-- code base (optional)
-  - React.JS
-  - Next.JS
-  - GrapQL
-  - Axios
-  - ReactQuery
-  - LowDB
+- cd ..(root folder)
 
-## 강의 성격
+```jsx
+// ch2
 
-- 프론트엔드 개발을 위한 백엔드 환경을 보다 쉽고 간단하게 준비할 수 있는 방법을 소개해드리는 내용입니다.
-- 최신 javascript 문법을 사용합니다. 최신문법에 익숙하지 않은 분들은 중간중간 별도의 학습이 필요합니다.
-- 이론을 자세하게 설명하는 강의는 아닙니다.
+yarn run server
+```
 
-## 목표
+---
 
-- CRUD(Create, Read, Update, Delete)의 기본기를 다집니다.
-- 연습용 서버(REST API, GraphQL)를 직접 만들 수 있습니다.
-- 로컬에서 간단하게 DB를 구축하는 방법을 배웁니다.
+### [next.js getInitialProps 사용법](https://kyounghwan01.github.io/blog/React/next/mui/#document-tsx)
 
-## 커리큘럼
+- 서버사이드 렌더링을 하는 nextJs에서 컴포넌트는 각 페이지마다 사전에 불러와야할 데이터가 있습니다.(이하 data fetching) react, vue같은 Client Side Rendering (CSR)의 경우는 useEffect, created 함수를 이용하여 data fetching을 합니다. **서버사이드에서 실행하는 next에서는 getInitialProps를 이용하여 data fetching 작업을 합니다.**
 
-### 1. Client - 기본기능 구현
+- next v9 이상에서는 getInitialProps 대신 getStaticProps, getStaticPaths, getServerSideProps을 사용하도록 가이드 합니다.
 
-- 클라이언트 환경 세팅
-- 목록뷰 구현
-- 스타일
-- 메시지 추가하기
-- 메시지 수정 & 삭제하기
+- getInitialProps 이점
+  - 1. 속도가 빨라집니다. 서버는 data fetching만, 브라우저는 렌더링만 함으로 연산을 브라우저와 서버가 각각 나누어 분담하게되어 그만큼 속도가 빨라집니다.
+  - 2. 함수형 컴포넌트로 next를 코딩할 경우, 렌더링 하는 함수와 data fetching을 하는 함수가 분리됨으로 개발자의 입장에서 로직 파악이 쉽습니다. (예시 코드를 보면서 자세히 설명하겠습니다.)
 
-### 2. Server - REST API
+```jsx
+import "./index.scss";
 
-- express 이용한 서버 및 JSON Database 만들기
-- server routes
+// NextJS에서 서버사이드 렌더링을 하기위한 컴포넌트
+const App = ({ Component, pageProps }) => <Component {...pageProps} />;
 
-### 3. Client - REST API 통신
+// getInitialProps: data fetching 작업
+App.getInitialProps = async ({ ctx, Component }) => {
+  // 하위 컴포넌트에 getInitialProps가 있다면 추가 (각 개별 컴포넌트에서 사용할 값 추가)
+  const pageProps = await Component.getInitialProps?.(ctx);
+  return { pageProps };
+};
 
-- 클라이언트에서 REST API로 데이터 통신하기
-- 무한스크롤 구현하기
-- 서버사이드 렌더링
+export default App;
+```
 
-### 4. Server - GraphQL
+<br/>
 
-- GraphQL 환경세팅 및 schema 작성
-- resolver 작성
-- GraphQL Playground 소개 및 동작 테스트
+- Context Object
+  - pathname - 현재 pathname (`/user?type=normal`-> `/user`)
+  - queyr - 현재 query를 객체로 (`http://localhost:3000/blog/test` -> `{id: 'test'}`, `/post?type=secret` -> `{type: 'secret'}`)
+  - asPath - 전체 path (`http://localhost:3000/blog/test` -> `/blog/[id]`, `/blog/test`)
+  - req - HTTP request object (server only)
+  - res - HTTP response object (server only)
+  - err - Error object if any error is encountered during the rendering
 
-### 5. Client - GraphQL 통신
-
-- GraphQL 환경세팅
-- 클라이언트에서 GraphQL로 데이터 통신하기
-
-### 6. Client - GraphQL 무한스크롤
-
-- useInfiniteQuery 적용하기
-- 무한스크롤 환경에서 mutation 처리 및 기능 보완
-
-### 7. 기타
-
-- LowDB
-- json-server
+---

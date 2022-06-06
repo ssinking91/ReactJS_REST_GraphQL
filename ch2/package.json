@@ -2,8 +2,8 @@
   "name": "api-practice",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://github.com/roy-jung/api-practice.git",
-  "author": "roy-jung <power4ce@gmail.com>",
+  "repository": "https://github.com/ssinking91/ReactJS_REST_GraphQL.git",
+  "author": "ssinking91 <tlsgkdals71@naver.com>",
   "license": "MIT",
   "private": true,
   "workspaces": [
