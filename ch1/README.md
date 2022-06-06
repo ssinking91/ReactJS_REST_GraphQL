@@ -1,4 +1,4 @@
-### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(client)
 
 ---
 
@@ -31,6 +31,8 @@ NODE_ENV=production yarn install 또는 yarn install --production
 ```
 
 ---
+
+<br />
 
 ### 🛠 1. Client - 기본기능 구현
 

@@ -32,6 +32,8 @@ NODE_ENV=production yarn install 또는 yarn install --production
 
 ---
 
+<br />
+
 ### 🛠 1. Client - 기본기능 구현
 
 - 클라이언트 환경 세팅
@@ -282,6 +284,15 @@ export default App;
 ### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(server)
 
 ---
+
+<br />
+
+### 🛠 1. Server - 기본기능 구현
+
+- express 서버 및 json database 만들기
+- routes 정의
+
+<br />
 
 ### 🔨 2. 실행방법
 
