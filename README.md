@@ -798,7 +798,7 @@ import useInfiniteScroll from "../hooks/useInfiniteScroll";
 
 ...
 
-  <div ref={fetchMoreEl} />
+  <div ref={fetchMoreEl} style={{ paddingBottom: "1px" }}/>
 
 ...
 
