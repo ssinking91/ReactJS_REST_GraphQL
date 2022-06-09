@@ -1,83 +1,210 @@
-# 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(ch4)
 
-[인프런 강의 링크](https://www.inflearn.com/course/풀스택-리액트-토이프로젝트?inst=4227b52f)
+<br/>
 
-- ReactJS 기반의 간단한 SNS 서비스를 만들면서 REST API 및 GraphQL을 연습합니다.
-- 클라이언트와 서버 양쪽을 모두 다룸으로써 서버에 대한 두려움을 낮춰드리고자 합니다.
-- 더이상 프론트엔드 개발을 위해 MySQL, mongoDB, Firebase 등을 찾아다니지 않아도 됩니다.
+---
 
-## 대상
+<br/>
 
-- 프론트엔드 개발자 또는 취준생
-- 데이터통신 연습을 하고 싶은데 마땅한 방법을 몰라 고민이신 분
-- Database나 server에 대해서까지 오랜 시간을 들여 공부해야 할지 망설여지는 분
-- 개발 단계에서 api가 마련되기 전에 프론트엔드 개발을 서두르고 싶은 분
-
-## 다루는 내용
-
-- core
-  - NodeJS
-  - express
-  - json Database (file system)
-
-- code base (optional)
-  - React.JS
-  - Next.JS
-  - GrapQL
-  - Axios
-  - ReactQuery
-  - LowDB
-
-## 강의 성격
-
-- 프론트엔드 개발을 위한 백엔드 환경을 보다 쉽고 간단하게 준비할 수 있는 방법을 소개해드리는 내용입니다.
-- 최신 javascript 문법을 사용합니다. 최신문법에 익숙하지 않은 분들은 중간중간 별도의 학습이 필요합니다.
-- 이론을 자세하게 설명하는 강의는 아닙니다.
-
-## 목표
-
-- CRUD(Create, Read, Update, Delete)의 기본기를 다집니다.
-- 연습용 서버(REST API, GraphQL)를 직접 만들 수 있습니다.
-- 로컬에서 간단하게 DB를 구축하는 방법을 배웁니다.
-
-## 커리큘럼
-
-### 1. Client - 기본기능 구현
-
-- 클라이언트 환경 세팅
-- 목록뷰 구현
-- 스타일
-- 메시지 추가하기
-- 메시지 수정 & 삭제하기
-
-### 2. Server - REST API
-
-- express 이용한 서버 및 JSON Database 만들기
-- server routes
-
-### 3. Client - REST API 통신
-
-- 클라이언트에서 REST API로 데이터 통신하기
-- 무한스크롤 구현하기
-- 서버사이드 렌더링
-
-### 4. Server - GraphQL
+### 🛠 . Server - GraphQL(ch4)
 
 - GraphQL 환경세팅 및 schema 작성
 - resolver 작성
 - GraphQL Playground 소개 및 동작 테스트
 
-### 5. Client - GraphQL 통신
+---
 
-- GraphQL 환경세팅
-- 클라이언트에서 GraphQL로 데이터 통신하기
+<br/>
 
-### 6. Client - GraphQL 무한스크롤
+- cd ch4
+- cd server
 
-- useInfiniteQuery 적용하기
-- 무한스크롤 환경에서 mutation 처리 및 기능 보완
+```jsx
+// ch4/server
 
-### 7. 기타
+yarn add apollo-server apollo-server-express graphql
+```
 
-- LowDB
-- json-server
+---
+
+<br/>
+
+1. ApolloServer(graphql) 정의
+
+```javascript
+// server/src/index.js
+
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import resolvers from "./resolvers/index.js";
+import schema from "./schema/index.js";
+import { readDB } from "./dbController.js";
+
+const server = new ApolloServer({
+  typeDefs: schema,
+  resolvers,
+  context: {
+    db: {
+      messages: readDB("messages"),
+      users: readDB("users"),
+    },
+  },
+});
+
+// REST_API와 가장 큰 차이점 => path가 오직 "/graphql"으로, resolvers를 통해 요청한 데이터들이 나눠지게 됨
+// graphql Playground의 cors 설정을 위해 "https://studio.apollographql.com" 추가
+const app = express();
+await server.start();
+server.applyMiddleware({
+  app,
+  path: "/graphql",
+  cors: {
+    origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+    credentials: true,
+  },
+});
+
+await app.listen({ port: 8000 });
+console.log("server listening on 8000...");
+```
+
+<br/>
+
+2. schema 정의
+
+```javascript
+// server/src/schema/message.js
+
+import { gql } from "apollo-server-express";
+
+const messageSchema = gql`
+  type Message {
+    id: ID!
+    text: String!
+    userId: ID!
+    timestamp: Float #13자리 숫자
+  }
+
+  extend type Query {
+    messages: [Message!]! # getMessages
+    message(id: ID!): Message! # getMessage
+  }
+
+  extend type Mutation {
+    createMessage(text: String!, userId: ID!): Message!
+    updateMessage(id: ID!, text: String!, userId: ID!): Message!
+    deleteMessage(id: ID!, userId: ID!): ID!
+  }
+`;
+
+export default messageSchema;
+```
+
+<br/>
+
+3. resolvers 정의
+   - parent: parent 객체. 거의 사용X
+   - args: Query에 필요한 필드에 제공되는 인수(parameter)
+   - context: 로그인한 사용자. DB Access 등의 중요한 정보들
+
+```javascript
+// server/src/resolvers/message.js
+
+import { v4 } from "uuid";
+import { writeDB } from "../dbController.js";
+
+const setMsgs = (data) => writeDB("messages", data);
+
+/* 
+parent: parent 객체. 거의 사용X
+args: Query에 필요한 필드에 제공되는 인수(parameter)
+context: 로그인한 사용자. DB Access 등의 중요한 정보들
+*/
+
+// schema에서 정의했던 명령어들 참고(Query, Mutation)
+// context는 src/index.js context와 같음
+const messageResolver = {
+  Query: {
+    messages: (parent, args, { db }) => {
+      // console.log({ parent, args, context })
+      return db.messages;
+    },
+
+    message: (parent, { id = "" }, { db }) => {
+      return db.messages.find((msg) => msg.id === id);
+    },
+  },
+
+  Mutation: {
+    createMessage: (parent, { text, userId }, { db }) => {
+      if (!userId) throw Error("사용자가 없습니다.");
+      const newMsg = {
+        id: v4(),
+        text,
+        userId,
+        timestamp: Date.now(),
+      };
+      db.messages.unshift(newMsg);
+      setMsgs(db.messages);
+      return newMsg;
+    },
+
+    updateMessage: (parent, { id, text, userId }, { db }) => {
+      const targetIndex = db.messages.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) throw Error("메시지가 없습니다.");
+      if (db.messages[targetIndex].userId !== userId)
+        throw Error("사용자가 다릅니다.");
+
+      const newMsg = { ...db.messages[targetIndex], text };
+      db.messages.splice(targetIndex, 1, newMsg);
+      setMsgs(db.messages);
+      return newMsg;
+    },
+
+    deleteMessage: (parent, { id, userId }, { db }) => {
+      const targetIndex = db.messages.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) throw "메시지가 없습니다.";
+      if (db.messages[targetIndex].userId !== userId)
+        throw "사용자가 다릅니다.";
+      db.messages.splice(targetIndex, 1);
+      setMsgs(db.messages);
+      return id;
+    },
+  },
+};
+
+export default messageResolver;
+```
+
+<br/>
+
+4. Playground에서 데이터 통신
+   - schema 정의 참조
+
+```javascript
+// query Operation
+query Messages {
+ messages {
+   id
+   text
+   userId
+   timestamp
+ }
+}
+
+// mutation Operation
+mutation Message($text: String!, $userId: ID!) {
+ createMessage(text: $text, userId: $userId) {
+   id
+   text
+   userId
+   timestamp
+ }
+}
+
+// mutation Variables(Headers)
+{
+  "text": "테스트1"
+  "userId": "roy",
+}
+```
