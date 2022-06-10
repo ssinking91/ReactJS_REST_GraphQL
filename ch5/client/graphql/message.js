@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from "graphql-tag";
 
 export const GET_MESSAGES = gql`
   query GET_MESSAGES {
@@ -9,7 +9,7 @@ export const GET_MESSAGES = gql`
       timestamp
     }
   }
-`
+`;
 
 export const GET_MESSAGE = gql`
   query GET_MESSAGE($id: ID!) {
@@ -20,7 +20,7 @@ export const GET_MESSAGE = gql`
       timestamp
     }
   }
-`
+`;
 
 export const CREATE_MESSAGE = gql`
   mutation CREATE_MESSAGE($text: String!, $userId: ID!) {
@@ -31,7 +31,7 @@ export const CREATE_MESSAGE = gql`
       timestamp
     }
   }
-`
+`;
 
 export const UPDATE_MESSAGE = gql`
   mutation UPDATE_MESSAGE($id: ID!, $text: String!, $userId: ID!) {
@@ -42,10 +42,10 @@ export const UPDATE_MESSAGE = gql`
       timestamp
     }
   }
-`
+`;
 
 export const DELETE_MESSAGE = gql`
   mutation DELETE_MESSAGE($id: ID!, $userId: ID!) {
     deleteMessage(id: $id, userId: $userId)
   }
-`
+`;

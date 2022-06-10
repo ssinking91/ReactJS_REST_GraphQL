@@ -1,16 +1,27 @@
-import MsgInput from './MsgInput'
+import MsgInput from "./MsgInput";
 
-const MsgItem = ({ id, userId, timestamp, text, onUpdate, onDelete, isEditing, startEdit, myId, user }) => (
+const MsgItem = ({
+  id,
+  userId,
+  timestamp,
+  text,
+  onUpdate,
+  onDelete,
+  isEditing,
+  startEdit,
+  myId,
+  user,
+}) => (
   <li className="messages__item">
     <h3>
-      {user.nickname}{' '}
+      {user ? user.nickname : "없음"}{" "}
       <sub>
-        {new Date(timestamp).toLocaleString('ko-KR', {
-          year: 'numeric',
-          month: 'numeric',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
+        {new Date(timestamp).toLocaleString("ko-KR", {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
           hour12: true,
         })}
       </sub>
@@ -31,6 +42,6 @@ const MsgItem = ({ id, userId, timestamp, text, onUpdate, onDelete, isEditing, s
       </div>
     )}
   </li>
-)
+);
 
-export default MsgItem
+export default MsgItem;
