@@ -32,6 +32,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ createMessage }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : createMessage
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           return {
             messages: [createMessage, ...old.messages],
@@ -47,6 +48,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ updateMessage }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : updateMessage
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           const targetIndex = old.messages.findIndex(
             (msg) => msg.id === updateMessage.id
@@ -67,6 +69,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ deleteMessage: deletedId }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : deleteMessage: deletedId
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           const targetIndex = old.messages.findIndex(
             (msg) => msg.id === deletedId

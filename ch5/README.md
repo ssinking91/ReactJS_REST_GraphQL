@@ -40,7 +40,7 @@ yarn add graphql graphql-request graphql-tag react-query
 
   1. 리액트에서 비동기 로직을 리액트스럽게 다룰 수 있게 해주는 라이브러리
   2. server state를 아주 효율적으로 관리
-  3. sLoading, isError, refetch, Data Caching 등 기능을 제공
+  3. isLoading, isError, refetch, Data Caching 등 기능을 제공
 
 <br/>
 
@@ -75,7 +75,7 @@ const { data, isLoading, error } = useQuery(queryKey, queryFn, options);
 - \_app.js에서 React Query 초기화 작업
 
 ```jsx
-// _app.js에서 React Query 초기화 작업
+// _app.js에서 React Query 초기화(사용 가능한 상태) 작업
 import { useRef } from "react";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { Hydrate } from "react-query/hydration";
@@ -285,6 +285,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ createMessage }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : createMessage
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           return {
             messages: [createMessage, ...old.messages],
@@ -300,6 +301,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ updateMessage }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : updateMessage
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           const targetIndex = old.messages.findIndex(
             (msg) => msg.id === updateMessage.id
@@ -320,6 +322,7 @@ const MsgList = ({ smsgs, users }) => {
       onSuccess: ({ deleteMessage: deletedId }) => {
         // ✅ QueryKeys 지정 후, messages 상제 정보(데이터) 업데이트
         // 기존 데이터 : old, 업데이트 데이터 : deleteMessage: deletedId
+        // mutation에서 return된 값을 이용해서 get 함수의 파라미터를 변경해야할 경우 setQueryData를 사용
         client.setQueryData(QueryKeys.MESSAGES, (old) => {
           const targetIndex = old.messages.findIndex(
             (msg) => msg.id === deletedId
@@ -380,6 +383,31 @@ const MsgList = ({ smsgs, users }) => {
 
 export default MsgList;
 ```
+
+<br/>
+
+- 💡 Query들은 4개의 상태를 가지며, useQuery가 반환하는 객체의 프로퍼티로 어떤 상태인지 확인이 가능하다.
+
+  - fresh : 새롭게 추가된 쿼리 인스턴스 → active 상태의 시작, 기본 staleTime이 0이기 때문에 아무것도 설정을 안해주면 호출이 끝나고 바로 stale 상태로 변한다. staleTime을 늘려줄 경우 fresh한 상태가 유지되는데, 이때는 쿼리가 다시 마운트되도 패칭이 발생하지 않고 기존의 fresh한 값을 반환한다.
+  - fetching : 요청을 수행하는 중인 쿼리
+  - stale : 인스턴스가 존재하지만 이미 패칭이 완료된 쿼리. 특정 쿼리가 stale된 상태에서 같은 쿼리 마운트를 시도한다면 캐싱된 데이터를 반환하면서 리패칭을 시도한다.
+  - inactive : active 인스턴스가 하나도 없는 쿼리. inactive된 이후에도 cacheTime 동안 캐시된 데이터가 유지된다. cacheTime이 지나면 GC된다.
+
+<br/>
+
+- 💡 unique key : 한 번 fresh가 되었다면 계속 추적이 가능하다. 리패칭, 캐싱, 공유 등을 할때 참조되는 값. 주로 배열을 사용하고, 배열의 요소로 쿼리의 이름을 나타내는 문자열과 프로미스를 리턴하는 함수의 인자로 쓰이는 값을 넣는다.
+
+<br/>
+
+- 💡 Caching Process
+  - useQuery의 첫번째, 새로운 인스턴스 마운트 ⇒ 만약에 런타임간 최초로 fresh한 해당 쿼리가 호출되었다면, 캐싱하고, 패칭이 끝나면 해당 쿼리를 stale로 바꿈(staleTime:0)
+  - 앱 어딘가에서 useQuery 두번째 인스턴스 마운트 ⇒ 이미 쿼리가 stale이므로 접때 요청때 만들어 놨었던 캐시를 반환하고 리패칭을 함. 이때 캐시도 업데이트.
+  - 쿼리가 언마운트되거나 더이상 사용하지 않을 때 ⇒ 마지막 인스턴스가 언마운트되어 inactive 상태가 되었을때 5분(cacheTime의 기본값)이 지나면 자동으로 삭제한다.
+
+<br/>
+
+[React Query 더 알아보기\_1](https://kyounghwan01.github.io/blog/React/react-query/basic/#api)<br/>
+[React Query 더 알아보기\_2](https://maxkim-j.github.io/posts/react-query-preview)
 
 <br/>
 
