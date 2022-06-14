@@ -247,7 +247,28 @@ export const DELETE_MESSAGE = gql`
 
 <br/>
 
-- React Query의 useQuery 사용
+- React Query의 [useQuery](https://jforj.tistory.com/243?category=877028) 사용 => `const res = useQuery(queryKey, queryFn);`
+
+  1. React Query를 이용해 서버로부터 데이터를 조회해올 때 사용합니다.
+
+  2. 데이터 조회가 아닌 데이터 변경 작업을 할 때는 useMutation을 사용합니다.
+
+     - invalidateQueries
+
+       - 서버로부터 다시 데이터를 조회해오기 위함
+       - 데이터를 저장할 때 invalidateQueries를 이용해 useQuery가 가지고 있던 queryKey의 유효성을 제거해주면 캐싱되어있는 데이터를 화면에 보여주지 않고 서버에 새롭게 데이터를 요청
+       - `queryClient.invalidateQueries('QueryKeys.MESSAGES'); // queryKey 유효성 제거`
+
+     - setQueryData
+
+       - 기존에 queryKey에 매핑되어 있는 데이터를 새롭게 정의
+       - 서버에 다시 데이터를 요청하지 않고도 사용자 화면에 변경된 데이터를 함께 보여줄 수 있음
+
+  3. queryKey : useQuery마다 부여되는 고유 Key 값(문자열, 배열)
+
+     - 💡 queryKey 역할 : React Query가 query 캐싱을 관리할 수 있도록 도와줌
+
+  4. queryFn : promise 처리가 이루어지는 함수
 
 ```jsx
 // client/components/MsgList.js
@@ -407,7 +428,9 @@ export default MsgList;
 <br/>
 
 [React Query 더 알아보기\_1](https://kyounghwan01.github.io/blog/React/react-query/basic/#api)<br/>
-[React Query 더 알아보기\_2](https://maxkim-j.github.io/posts/react-query-preview)
+[React Query 더 알아보기\_2](https://maxkim-j.github.io/posts/react-query-preview)<br/>
+[React Query 더 알아보기\_3](https://fe-developers.kakaoent.com/2022/220224-data-fetching-libs/)<br/>
+[React Query 더 알아보기\_4](https://jforj.tistory.com/243?category=877028)<br/>
 
 <br/>
 
