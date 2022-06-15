@@ -1,83 +1,183 @@
-# 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(lowdb-rest)
 
-[인프런 강의 링크](https://www.inflearn.com/course/풀스택-리액트-토이프로젝트?inst=4227b52f)
+<br/>
 
-- ReactJS 기반의 간단한 SNS 서비스를 만들면서 REST API 및 GraphQL을 연습합니다.
-- 클라이언트와 서버 양쪽을 모두 다룸으로써 서버에 대한 두려움을 낮춰드리고자 합니다.
-- 더이상 프론트엔드 개발을 위해 MySQL, mongoDB, Firebase 등을 찾아다니지 않아도 됩니다.
+---
 
-## 대상
+<br/>
 
-- 프론트엔드 개발자 또는 취준생
-- 데이터통신 연습을 하고 싶은데 마땅한 방법을 몰라 고민이신 분
-- Database나 server에 대해서까지 오랜 시간을 들여 공부해야 할지 망설여지는 분
-- 개발 단계에서 api가 마련되기 전에 프론트엔드 개발을 서두르고 싶은 분
+### 🛠 . LowDB_REST
 
-## 다루는 내용
+- LowDB_REST
 
-- core
-  - NodeJS
-  - express
-  - json Database (file system)
+---
 
-- code base (optional)
-  - React.JS
-  - Next.JS
-  - GrapQL
-  - Axios
-  - ReactQuery
-  - LowDB
+<br/>
 
-## 강의 성격
+- cd lowdb-rest
+- cd server
 
-- 프론트엔드 개발을 위한 백엔드 환경을 보다 쉽고 간단하게 준비할 수 있는 방법을 소개해드리는 내용입니다.
-- 최신 javascript 문법을 사용합니다. 최신문법에 익숙하지 않은 분들은 중간중간 별도의 학습이 필요합니다.
-- 이론을 자세하게 설명하는 강의는 아닙니다.
+```jsx
+// lowdb-rest/server
 
-## 목표
+yarn add lowdb
+```
 
-- CRUD(Create, Read, Update, Delete)의 기본기를 다집니다.
-- 연습용 서버(REST API, GraphQL)를 직접 만들 수 있습니다.
-- 로컬에서 간단하게 DB를 구축하는 방법을 배웁니다.
+---
 
-## 커리큘럼
+<br/>
 
-### 1. Client - 기본기능 구현
+- [lowdb](https://hyungju-lee.github.io/hyungju-lee2021_2.github.io/categories/study/react_restapi_graphql/react_restapi_graphql8.html)
+  - json 파일 기반 데이터베이스로 쉽고 빠르게 DB의 기능을 구현할 수 있도록 도와주는 모듈
 
-- 클라이언트 환경 세팅
-- 목록뷰 구현
-- 스타일
-- 메시지 추가하기
-- 메시지 수정 & 삭제하기
+1. dbController 변경 및 db.json 생성
 
-### 2. Server - REST API
+```javascript
+// lowdb-rest/server/src/dbController.js
 
-- express 이용한 서버 및 JSON Database 만들기
-- server routes
+// file system, path의 resolve는 lowdb가 알아서해주므로 삭제합시다.
+import { LowSync, JSONFileSync } from "lowdb";
 
-### 3. Client - REST API 통신
+// 경로를 ./src/db.json으로 설정. 모두 한곳에 뭉칠 겁니다.
+// 현재 server/src/db 폴더에 messages.json, users.json이 있는데, 이를 server/src/db.json 파일로 한데 묶을려고 계획중입니다.
+// server/src/db.json이라는 하나의 파일 안에서 messages, users가 모두 있도록 하겠습니다.
+const adapter = new JSONFileSync("./src/db.json");
 
-- 클라이언트에서 REST API로 데이터 통신하기
-- 무한스크롤 구현하기
-- 서버사이드 렌더링
+// 그리고 db라는 걸 만들겁니다.
+const db = new LowSync(adapter);
 
-### 4. Server - GraphQL
+// db에서 이제 write, read라는 명령을 쓰게 될겁니다.
+export default db;
+```
 
-- GraphQL 환경세팅 및 schema 작성
-- resolver 작성
-- GraphQL Playground 소개 및 동작 테스트
+<br/>
 
-### 5. Client - GraphQL 통신
+2. routes 변경
 
-- GraphQL 환경세팅
-- 클라이언트에서 GraphQL로 데이터 통신하기
+```javascript
+// lowdb-rest/server/src/routes/messages.js
 
-### 6. Client - GraphQL 무한스크롤
+import { v4 } from "uuid";
+import db from "../dbController.js";
 
-- useInfiniteQuery 적용하기
-- 무한스크롤 환경에서 mutation 처리 및 기능 보완
+const getMsgs = () => {
+  // lowdb에서 제공하는 기능입니다. db.read(); 메소드는 db 자체를 읽어오는 기능을 수행합니다.
+  db.read();
 
-### 7. 기타
+  // 이 db는 계속 캐시에 남아있는 상태여서, 만약에 db.data가 있으면 db.data를 계속해서 사용하고
+  // 없을 경우에는 messages를 다시 빈 배열로 만들어주는 안전장치를 마련합니다.
+  db.data = db.data || { messages: [] };
+  return db.data.messages;
+};
 
-- LowDB
-- json-server
+const messagesRoute = [
+  {
+    // GET MESSAGES
+    method: "get",
+    route: "/messages",
+    handler: ({ query: { cursor = "" } }, res) => {
+      const msgs = getMsgs();
+      const fromIndex = msgs.findIndex((msg) => msg.id === cursor) + 1;
+      res.send(msgs.slice(fromIndex, fromIndex + 15));
+    },
+  },
+  {
+    // GET MESSAGE
+    method: "get",
+    route: "/messages/:id",
+    handler: ({ params: { id } }, res) => {
+      try {
+        const msgs = getMsgs();
+        const msg = msgs.find((m) => m.id === id);
+        if (!msg) throw Error("not found");
+        res.send(msg);
+      } catch (err) {
+        res.status(404).send({ error: err });
+      }
+    },
+  },
+  {
+    // CREATE MESSAGE
+    method: "post",
+    route: "/messages",
+    handler: ({ body }, res) => {
+      try {
+        if (!body.userId) throw Error("no userId");
+        const msgs = getMsgs();
+        const newMsg = {
+          id: v4(),
+          text: body.text,
+          userId: body.userId,
+          timestamp: Date.now(),
+        };
+        db.data.messages.unshift(newMsg);
+        // db.write() 코드로 db에 쓸 수 있다.
+        db.write();
+        res.send(newMsg);
+      } catch (err) {
+        res.status(500).send({ error: err });
+      }
+    },
+  },
+  {
+    // UPDATE MESSAGE
+    method: "put",
+    route: "/messages/:id",
+    handler: ({ body, params: { id } }, res) => {
+      try {
+        const msgs = getMsgs();
+        const targetIndex = msgs.findIndex((msg) => msg.id === id);
+        if (targetIndex < 0) throw "메시지가 없습니다.";
+        if (msgs[targetIndex].userId !== body.userId)
+          throw "사용자가 다릅니다.";
+
+        const newMsg = { ...msgs[targetIndex], text: body.text };
+        db.data.messages.splice(targetIndex, 1, newMsg);
+        // db.write() 코드로 db에 쓸 수 있다.
+        db.write();
+        res.send(newMsg);
+      } catch (err) {
+        res.status(500).send({ error: err });
+      }
+    },
+  },
+  {
+    // DELETE MESSAGE
+    method: "delete",
+    route: "/messages/:id",
+    handler: ({ params: { id }, query: { userId } }, res) => {
+      try {
+        const msgs = getMsgs();
+        const targetIndex = msgs.findIndex((msg) => msg.id === id);
+        if (targetIndex < 0) throw "메시지가 없습니다.";
+        if (msgs[targetIndex].userId !== userId) throw "사용자가 다릅니다.";
+
+        db.data.messages.splice(targetIndex, 1);
+        db.write();
+        res.send(id);
+      } catch (err) {
+        res.status(500).send({ error: err });
+      }
+    },
+  },
+];
+
+export default messagesRoute;
+```
+
+<br/>
+
+3.  nodemon에서 감시하는 대상 변경
+
+```javascript
+// lowdb-rest/server/nodemon.json
+
+{
+  "watch": ["src"],
+  // "ignore": ["db/**/*"],
+  "ignore": ["db.json"],
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
+```

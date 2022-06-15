@@ -1,83 +1,189 @@
-# 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(lowdb-gql)
 
-[인프런 강의 링크](https://www.inflearn.com/course/풀스택-리액트-토이프로젝트?inst=4227b52f)
+<br/>
 
-- ReactJS 기반의 간단한 SNS 서비스를 만들면서 REST API 및 GraphQL을 연습합니다.
-- 클라이언트와 서버 양쪽을 모두 다룸으로써 서버에 대한 두려움을 낮춰드리고자 합니다.
-- 더이상 프론트엔드 개발을 위해 MySQL, mongoDB, Firebase 등을 찾아다니지 않아도 됩니다.
+---
 
-## 대상
+<br/>
 
-- 프론트엔드 개발자 또는 취준생
-- 데이터통신 연습을 하고 싶은데 마땅한 방법을 몰라 고민이신 분
-- Database나 server에 대해서까지 오랜 시간을 들여 공부해야 할지 망설여지는 분
-- 개발 단계에서 api가 마련되기 전에 프론트엔드 개발을 서두르고 싶은 분
+### 🛠 . LowDB_GQL
 
-## 다루는 내용
+- LowDB_GQL
 
-- core
-  - NodeJS
-  - express
-  - json Database (file system)
+---
 
-- code base (optional)
-  - React.JS
-  - Next.JS
-  - GrapQL
-  - Axios
-  - ReactQuery
-  - LowDB
+<br/>
 
-## 강의 성격
+- cd lowdb-gql
+- cd server
 
-- 프론트엔드 개발을 위한 백엔드 환경을 보다 쉽고 간단하게 준비할 수 있는 방법을 소개해드리는 내용입니다.
-- 최신 javascript 문법을 사용합니다. 최신문법에 익숙하지 않은 분들은 중간중간 별도의 학습이 필요합니다.
-- 이론을 자세하게 설명하는 강의는 아닙니다.
+```jsx
+// lowdb-gql/server
 
-## 목표
+yarn add lowdb
+```
 
-- CRUD(Create, Read, Update, Delete)의 기본기를 다집니다.
-- 연습용 서버(REST API, GraphQL)를 직접 만들 수 있습니다.
-- 로컬에서 간단하게 DB를 구축하는 방법을 배웁니다.
+---
 
-## 커리큘럼
+<br/>
 
-### 1. Client - 기본기능 구현
+- [lowdb](https://hyungju-lee.github.io/hyungju-lee2021_2.github.io/categories/study/react_restapi_graphql/react_restapi_graphql8.html)
+  - json 파일 기반 데이터베이스로 쉽고 빠르게 DB의 기능을 구현할 수 있도록 도와주는 모듈
 
-- 클라이언트 환경 세팅
-- 목록뷰 구현
-- 스타일
-- 메시지 추가하기
-- 메시지 수정 & 삭제하기
+1. dbController 변경 및 db.json 생성
 
-### 2. Server - REST API
+```javascript
+// lowdb-gql/server/src/dbController.js
 
-- express 이용한 서버 및 JSON Database 만들기
-- server routes
+// file system, path의 resolve는 lowdb가 알아서해주므로 삭제합시다.
+import { LowSync, JSONFileSync } from "lowdb";
 
-### 3. Client - REST API 통신
+// 경로를 ./src/db.json으로 설정. 모두 한곳에 뭉칠 겁니다.
+// 현재 server/src/db 폴더에 messages.json, users.json이 있는데, 이를 server/src/db.json 파일로 한데 묶을려고 계획중입니다.
+// server/src/db.json이라는 하나의 파일 안에서 messages, users가 모두 있도록 하겠습니다.
+const adapter = new JSONFileSync("./src/db.json");
 
-- 클라이언트에서 REST API로 데이터 통신하기
-- 무한스크롤 구현하기
-- 서버사이드 렌더링
+// 그리고 db라는 걸 만들겁니다.
+const db = new LowSync(adapter);
 
-### 4. Server - GraphQL
+// db에서 이제 write, read라는 명령을 쓰게 될겁니다.
+export default db;
+```
 
-- GraphQL 환경세팅 및 schema 작성
-- resolver 작성
-- GraphQL Playground 소개 및 동작 테스트
+<br/>
 
-### 5. Client - GraphQL 통신
+2. index.js 변경
 
-- GraphQL 환경세팅
-- 클라이언트에서 GraphQL로 데이터 통신하기
+```javascript
+// lowdb-gql/server/src/index.js
 
-### 6. Client - GraphQL 무한스크롤
+import express from "express";
+import { ApolloServer } from "apollo-server-express";
+import resolvers from "./resolvers/index.js";
+import schema from "./schema/index.js";
+import db from "./dbController.js";
 
-- useInfiniteQuery 적용하기
-- 무한스크롤 환경에서 mutation 처리 및 기능 보완
+// 이 상태에서 readDB 라는 함수를 다시 만들겠습니다.
+// 아래와 같이 작성하면 return하는 db.data 안에는 messages와 users가 모두 들어있는 상태가되겠죠?
+const readDB = () => {
+  db.read();
+  return db.data;
+};
 
-### 7. 기타
+const server = new ApolloServer({
+  typeDefs: schema,
+  resolvers,
+  context: {
+    // 아래 부분이 아래와 같이 수정되면 되겠습니다.
+    // 그런데 아래 db와 위에 import해온 db와 이름이 겹쳐서 resolvers에서 문제가될겁니다.
+    // 그래서 아래를 models라는 이름으로 바꿉니다.
+    models: readDB(),
+  },
+});
 
-- LowDB
-- json-server
+const app = express();
+await server.start();
+server.applyMiddleware({
+  app,
+  path: "/graphql",
+  cors: {
+    origin: ["http://localhost:3000", "https://studio.apollographql.com"],
+    credentials: true,
+  },
+});
+
+await app.listen({ port: 8000 });
+console.log("server listening on 8000...");
+```
+
+<br/>
+
+3.
+
+```javascript
+// lowdb-gql/server/src/resolvers/messages.js
+
+import { v4 } from "uuid";
+import db from "../dbController.js";
+
+/* 
+parent: parent 객체. 거의 사용X
+args: Query에 필요한 필드에 제공되는 인수(parameter)
+context: 로그인한 사용자. DB Access 등의 중요한 정보들
+*/
+
+const messageResolver = {
+  Query: {
+    messages: (parent, { cursor = "" }, { models }) => {
+      const fromIndex =
+        models.messages.findIndex((msg) => msg.id === cursor) + 1;
+      return models.messages?.slice(fromIndex, fromIndex + 15) || [];
+    },
+    message: (parent, { id = "" }, { models }) => {
+      return models.messages.find((msg) => msg.id === id);
+    },
+  },
+  Mutation: {
+    createMessage: (parent, { text, userId }, { models }) => {
+      if (!userId) throw Error("사용자가 없습니다.");
+      const newMsg = {
+        id: v4(),
+        text,
+        userId,
+        timestamp: Date.now(),
+      };
+      models.messages.unshift(newMsg);
+      // GraphQL의 장점은 models로 불러온 것이 db랑 계속 연동이되고 있다라는 부분입니다.
+      // 그래서 data가 변경이되었을때 그 models 그대로 db를 쓰게끔하는 db.write() 명령어만 수행해주면됩니다.
+      db.write();
+      return newMsg;
+    },
+    updateMessage: (parent, { id, text, userId }, { models }) => {
+      const targetIndex = models.messages.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) throw Error("메시지가 없습니다.");
+      if (models.messages[targetIndex].userId !== userId)
+        throw Error("사용자가 다릅니다.");
+
+      const newMsg = { ...models.messages[targetIndex], text };
+      models.messages.splice(targetIndex, 1, newMsg);
+      // GraphQL의 장점은 models로 불러온 것이 db랑 계속 연동이되고 있다라는 부분입니다.
+      // 그래서 data가 변경이되었을때 그 models 그대로 db를 쓰게끔하는 db.write() 명령어만 수행해주면됩니다.
+      db.write();
+      return newMsg;
+    },
+    deleteMessage: (parent, { id, userId }, { models }) => {
+      const targetIndex = models.messages.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) throw "메시지가 없습니다.";
+      if (models.messages[targetIndex].userId !== userId)
+        throw "사용자가 다릅니다.";
+      models.messages.splice(targetIndex, 1);
+      // GraphQL의 장점은 models로 불러온 것이 db랑 계속 연동이되고 있다라는 부분입니다.
+      // 그래서 data가 변경이되었을때 그 models 그대로 db를 쓰게끔하는 db.write() 명령어만 수행해주면됩니다.
+      db.write();
+      return id;
+    },
+  },
+  Message: {
+    user: (msg, args, { models }) => models.users[msg.userId],
+  },
+};
+
+export default messageResolver;
+```
+
+<br/>
+
+4.  nodemon에서 감시하는 대상 변경
+
+```javascript
+// lowdb-gql/server/nodemon.json
+
+{
+  "watch": ["src"],
+  // "ignore": ["db/**/*"],
+  "ignore": ["db.json"],
+  "env": {
+    "NODE_ENV": "development"
+  }
+}
+```

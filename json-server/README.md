@@ -1,83 +1,203 @@
-# 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기
+### 💫 토이프로젝트 클론코딩으로 REST API 및 GraphQL 연습하기(json-server)
 
-[인프런 강의 링크](https://www.inflearn.com/course/풀스택-리액트-토이프로젝트?inst=4227b52f)
+<br/>
 
-- ReactJS 기반의 간단한 SNS 서비스를 만들면서 REST API 및 GraphQL을 연습합니다.
-- 클라이언트와 서버 양쪽을 모두 다룸으로써 서버에 대한 두려움을 낮춰드리고자 합니다.
-- 더이상 프론트엔드 개발을 위해 MySQL, mongoDB, Firebase 등을 찾아다니지 않아도 됩니다.
+---
 
-## 대상
+<br/>
 
-- 프론트엔드 개발자 또는 취준생
-- 데이터통신 연습을 하고 싶은데 마땅한 방법을 몰라 고민이신 분
-- Database나 server에 대해서까지 오랜 시간을 들여 공부해야 할지 망설여지는 분
-- 개발 단계에서 api가 마련되기 전에 프론트엔드 개발을 서두르고 싶은 분
+### 🛠 . json-server
 
-## 다루는 내용
-
-- core
-  - NodeJS
-  - express
-  - json Database (file system)
-
-- code base (optional)
-  - React.JS
-  - Next.JS
-  - GrapQL
-  - Axios
-  - ReactQuery
-  - LowDB
-
-## 강의 성격
-
-- 프론트엔드 개발을 위한 백엔드 환경을 보다 쉽고 간단하게 준비할 수 있는 방법을 소개해드리는 내용입니다.
-- 최신 javascript 문법을 사용합니다. 최신문법에 익숙하지 않은 분들은 중간중간 별도의 학습이 필요합니다.
-- 이론을 자세하게 설명하는 강의는 아닙니다.
-
-## 목표
-
-- CRUD(Create, Read, Update, Delete)의 기본기를 다집니다.
-- 연습용 서버(REST API, GraphQL)를 직접 만들 수 있습니다.
-- 로컬에서 간단하게 DB를 구축하는 방법을 배웁니다.
-
-## 커리큘럼
-
-### 1. Client - 기본기능 구현
-
-- 클라이언트 환경 세팅
-- 목록뷰 구현
-- 스타일
-- 메시지 추가하기
-- 메시지 수정 & 삭제하기
-
-### 2. Server - REST API
-
-- express 이용한 서버 및 JSON Database 만들기
-- server routes
-
-### 3. Client - REST API 통신
-
-- 클라이언트에서 REST API로 데이터 통신하기
-- 무한스크롤 구현하기
-- 서버사이드 렌더링
-
-### 4. Server - GraphQL
-
-- GraphQL 환경세팅 및 schema 작성
-- resolver 작성
-- GraphQL Playground 소개 및 동작 테스트
-
-### 5. Client - GraphQL 통신
-
-- GraphQL 환경세팅
-- 클라이언트에서 GraphQL로 데이터 통신하기
-
-### 6. Client - GraphQL 무한스크롤
-
-- useInfiniteQuery 적용하기
-- 무한스크롤 환경에서 mutation 처리 및 기능 보완
-
-### 7. 기타
-
-- LowDB
 - json-server
+
+---
+
+<br/>
+
+- cd json-server
+- cd server
+
+```jsx
+// json-server/server
+
+yarn add json-server
+```
+
+---
+
+<br/>
+
+- [json-server](https://hyungju-lee.github.io/hyungju-lee2021_2.github.io/categories/study/react_restapi_graphql/react_restapi_graphql8.html)
+
+  - 아주 짧은 시간에 REST API 를 구축해주는 라이브러리
+
+1. server/src/index.js 변경
+
+```javascript
+// server/src/index.js
+
+import jsonServer from "json-server";
+import cors from "cors";
+import messagesRoute from "./routes/messages.js";
+
+// express 서버 대신 jsonServer를 create 합니다.
+const app = jsonServer.create();
+
+// 그리고 router라는게 있는데 이 router는 우리가 만들어놓은 아래 routes랑 별개로 jsonServer가 자동으로 db에있는 json 구조를 바탕으로 알아서 라우트를 만들어줍니다.
+// 이것이 jsonServer가 제공하는 기능입니다.
+const router = jsonServer.router("./src/db.json");
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
+
+// 여기서 app.use로 jsonServer에 있는 bodyParser를 사용하겠다 라고 해줍니다.
+// 이 부분은 request에 body가 내려오는데 이 body 부분에 접근하게끔 해주는 녀석입니다.
+app.use(jsonServer.bodyParser);
+
+const routes = messagesRoute;
+routes.forEach(({ method, route, handler }) => {
+  app[method](route, handler);
+});
+
+app.use(router);
+
+app.listen(8000, () => {
+  console.log("server listening on 8000...");
+});
+```
+
+<br/>
+
+2. 무한스크롤 client/components/MsgList.js 변경
+
+```jsx
+// client/components/MsgList.js
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/router";
+import MsgItem from "./MsgItem";
+import MsgInput from "./MsgInput";
+import fetcher from "../fetcher";
+import useInfiniteScroll from "../hooks/useInfiniteScroll";
+
+const MsgList = ({ smsgs, users }) => {
+  const { query } = useRouter();
+  const userId = query.userId || query.userid || "";
+
+  const [msgs, setMsgs] = useState(smsgs);
+  const [editingId, setEditingId] = useState(null);
+  const [hasNext, setHasNext] = useState(true);
+  const fetchMoreEl = useRef(null);
+  const intersecting = useInfiniteScroll(fetchMoreEl);
+
+  const onCreate = async (text) => {
+    const newMsg = await fetcher("post", "/messages", { text, userId });
+    if (!newMsg) throw Error("something wrong");
+    setMsgs((msgs) => [newMsg, ...msgs]);
+  };
+
+  const onUpdate = async (text, id) => {
+    const newMsg = await fetcher("put", `/messages/${id}`, { text, userId });
+    if (!newMsg) throw Error("something wrong");
+    setMsgs((msgs) => {
+      const targetIndex = msgs.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) return msgs;
+      const newMsgs = [...msgs];
+      newMsgs.splice(targetIndex, 1, newMsg);
+      return newMsgs;
+    });
+    doneEdit();
+  };
+
+  const onDelete = async (id) => {
+    await fetcher("delete", `/messages/${id}`, { params: { userId } });
+    setMsgs((msgs) => {
+      const targetIndex = msgs.findIndex((msg) => msg.id === id);
+      if (targetIndex < 0) return msgs;
+      const newMsgs = [...msgs];
+      newMsgs.splice(targetIndex, 1);
+      return newMsgs;
+    });
+  };
+
+  const doneEdit = () => setEditingId(null);
+
+  const getMessages = async () => {
+    // _start 값을 계산하는 것이 낫겠습니다. msgs 갯수가 15개면 15부터 불러오면 되는거니깐.
+    const _start = msgs.length;
+    // 그럼 _end는 _start에 15개를 더한값이 되면되겠죠?
+    const _end = _start + 15;
+
+    // getMessages를 요청할 때 params에 cursor 대신에 _start가 되면 되는겁니다.
+    const newMsgs = await fetcher("get", "/messages", {
+      params: { _start, _end, _sort: "timestamp", _order: "desc" },
+    });
+    if (newMsgs.length === 0) {
+      setHasNext(false);
+      return;
+    }
+    setMsgs((msgs) => [...msgs, ...newMsgs]);
+  };
+
+  useEffect(() => {
+    if (intersecting && hasNext) getMessages();
+  }, [intersecting]);
+
+  return (
+    <>
+      {userId && <MsgInput mutate={onCreate} />}
+      <ul className="messages">
+        {msgs.map((x) => (
+          <MsgItem
+            key={x.id}
+            {...x}
+            onUpdate={onUpdate}
+            onDelete={() => onDelete(x.id)}
+            startEdit={() => setEditingId(x.id)}
+            isEditing={editingId === x.id}
+            myId={userId}
+            user={users.find((user) => user.id === x.userId)}
+          />
+        ))}
+      </ul>
+      <div ref={fetchMoreEl} />
+    </>
+  );
+};
+
+export default MsgList;
+```
+
+<br/>
+
+3. 최초 접속시를 고려 getServerSideProps 변경
+
+```jsx
+import MsgList from "../components/MsgList";
+import fetcher from "../fetcher";
+
+const Home = ({ smsgs, users }) => (
+  <>
+    <h1>SIMPLE SNS</h1>
+    <MsgList smsgs={smsgs} users={users} />
+  </>
+);
+
+export const getServerSideProps = async () => {
+  const smsgs = await fetcher(
+    "get",
+    "/messages?_start=0&_end=15&_sort=timestamp&_order=desc"
+  );
+
+  const users = await fetcher("get", "/users");
+  return {
+    props: { smsgs, users },
+  };
+};
+
+export default Home;
+```
