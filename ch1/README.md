@@ -265,7 +265,7 @@ export default App;
 
 - Context Object
   - pathname - 현재 pathname (`/user?type=normal`-> `/user`)
-  - queyr - 현재 query를 객체로 (`http://localhost:3000/blog/test` -> `{id: 'test'}`, `/post?type=secret` -> `{type: 'secret'}`)
+  - query - 현재 query를 객체로 (`http://localhost:3000/blog/test` -> `{id: 'test'}`, `/post?type=secret` -> `{type: 'secret'}`)
   - asPath - 전체 path (`http://localhost:3000/blog/test` -> `/blog/[id]`, `/blog/test`)
   - req - HTTP request object (server only)
   - res - HTTP response object (server only)
